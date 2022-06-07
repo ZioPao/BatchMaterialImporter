@@ -1,0 +1,22 @@
+GameProject {
+ ID "BatchMaterialImporter"
+ GUID "598F0A469787E00F"
+ TITLE "BatchMaterialImporter"
+ Dependencies {
+  "58D0FB3206B6F859"
+ }
+ Configurations {
+  GameProjectConfig PC {
+   WetnessRenderSettings WetnessRenderSettings "{598F0D13BC18E43F}" {
+   }
+  }
+  GameProjectConfig XBOX_ONE {
+  }
+  GameProjectConfig XBOX_SERIES {
+  }
+  GameProjectConfig PS4 {
+  }
+  GameProjectConfig HEADLESS {
+  }
+ }
+}

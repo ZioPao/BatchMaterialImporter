@@ -1,0 +1,6 @@
+MatPBRDecal {
+BCRMap "{53DB2C2AC9B4E673}test/albedo frames/tile013.edds"
+OpacityMap "{DCB20D098CEF9594}test/opacity frames/tile013.edds"
+NMOMap "{8C23A5EEEBD3CB50}test/normal frames/tile013.edds"
+AlphaTest 0.52
+}

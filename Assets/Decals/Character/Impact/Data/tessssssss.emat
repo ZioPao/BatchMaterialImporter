@@ -1,0 +1,11 @@
+MatPBRDecal {
+ ZBias 2
+ SortBias 2
+ AlphaTest 0.606
+ BlendMode AlphaBlend
+ BCRMap "{B7457A7A1FD7D488}Assets/Decals/Impact/Decal_entrance_wound_BCR.edds" 
+ OpacityMap "{296336257348383F}Assets/Decals/Impact/Decal_entrance_wound_A.edds" 
+ NMOMap "{4EDB5B839B19B89F}Assets/Decals/Impact/Decal_entrance_wound_N.edds" 
+ ParallaxScale -0.035
+ HeightMap "{F30B0904E402A481}Assets/Decals/Impact/Decal_entrance_wound_H.edds" 
+}
