@@ -1,4 +1,3 @@
-
 [WorkbenchPluginAttribute(name: "Batch Material Creator", category: "Pao's Plugins", wbModules: {"ResourceManager"}, awesomeFontCode: 0xf0c5)]
 class BatchMaterialCreator: ResourceManagerPlugin
 {
@@ -16,71 +15,225 @@ class BatchMaterialCreator: ResourceManagerPlugin
 	ResourceName saveFolder;
 	
 	
-	[Attribute(defvalue: "SampleSaveLocation", uiwidget : UIWidgets.Auto, desc: "Frame name starts with", category: "Frames")];
-	string startName;
-	
-	[Attribute(defvalue: "1", uiwidget : UIWidgets.EditBox, desc: "Number of frames", category: "Frames")];
-	int numOfFrames;
-	
-	
-	[Attribute(defvalue: "1.0", uiwidget : UIWidgets.EditBox, desc: "Alpha for Materials", category: "Material Settings")];
+	[Attribute(defvalue: "1.0", uiwidget : UIWidgets.EditBox, desc: "Alpha Test", category: "Material Settings")];
 	float alphaTest;
+	
+	[Attribute(defvalue: "1.0", uiwidget : UIWidgets.EditBox, desc: "Alpha Mul", category: "Material Settings")];
+	float alphaMul;
+	
+	[Attribute(defvalue: "AlphaBlend", uiwidget : UIWidgets.EditBox, desc: "Alpha Blend Mode", category: "Material Settings")];
+	string blendMode;
+	
+	//0.136 0 0 1
+	[Attribute(defvalue: "0.76 0.004 0.004 1", uiwidget : UIWidgets.Auto, desc: "Color", category: "Material Settings")];
+	string colorMaterial;		//color pciker doesnt work dunno why
 		
-
+	[Attribute(defvalue: "0", uiwidget : UIWidgets.EditBox, desc: "Normal Power", category: "Material Settings")];
+	float normalPower;
+	
+	[Attribute(defvalue: "0", uiwidget : UIWidgets.EditBox, desc: "Specular Multiplier", category: "Material Settings")];
+	float specularMul;
+	
+	[Attribute(defvalue: "0", uiwidget : UIWidgets.EditBox, desc: "Roughness Scale", category: "Material Settings")];
+	float roughnessScale;
+	
+	[Attribute(defvalue: "0", uiwidget : UIWidgets.EditBox, desc: "Metalness Scale", category: "Material Settings")];
+	float metalnessScale;
+	
+	
+	[Attribute(defvalue: "0", uiwidget : UIWidgets.EditBox, desc: "AO Scale", category: "Material Settings")];
+	float aoScale;
+	
+	[Attribute(defvalue: "0", uiwidget : UIWidgets.EditBox, desc: "Dielectric Reflectance", category: "Material Settings")];
+	float dielectricReflectance;
+	
+	
+	[Attribute(defvalue: "0", uiwidget : UIWidgets.CheckBox, desc: "GBuffer Normal", category: "GBuffer Override")];
+	bool gBufferNormal;
+	
+	[Attribute(defvalue: "0", uiwidget : UIWidgets.EditBox, desc: "Normal Combine Power", category: "GBuffer Override")];
+	float normalCombinePower;
+	
+	
+	
+		
 	[Attribute(defvalue: "1", uiwidget : UIWidgets.EditBox, desc: "Frame to start with", category: "Temp Fixes")];
 	int offsetFrame;
 	
+	
+	[Attribute(defvalue: "0", uiwidget : UIWidgets.CheckBox, desc: "Skip materials generation", category: "Temp Fixes")];
+	bool skipMatGen;
+	
+	[Attribute(defvalue: "0", uiwidget : UIWidgets.CheckBox, desc: "Import Texture", category: "Temp Fixes")];
+	bool importTexture;
+	
+	[Attribute(defvalue: "0", uiwidget : UIWidgets.CheckBox, desc: "000 index format", category: "Temp Fixes")];
+	bool compatIndex;
+	
+	
+	
+	ResourceManager resourceManager; 
+	
 
 	[ButtonAttribute("Run")]
+	
 	void RunButton()	 
+	
 	{
-		map<string, string> matParams = new map<string, string>();
-		string arrayResourceNameString = "array<ResourceName> materials = {";
+		
+	
+		
+		string arrayResourceNameString = "array<ResourceName> materials = {"; // i hate this ide so much.
+			
+
+		array<string> bcrArray = {};
+		array<string> nmoArray = {};
+		array<string> opArray = {};
+			
+
+		System.FindFiles(bcrArray.Insert, folderBCR.GetPath(), ".edds");
+			
+		System.FindFiles(nmoArray.Insert, folderNMO.GetPath(), ".edds");
+		System.FindFiles(opArray.Insert, folderOpacity.GetPath(), ".edds");
+			
+			
+		bcrArray.Sort();
+		nmoArray.Sort();
+		opArray.Sort();
+			
+		
+			
+			
+			
+		//really need a value
+		string bcrBaseString = bcrArray[0];
+		bcrBaseString.Replace("000","%1");		
+		bcrBaseString.Replace("001","%1");		
+
+			
+		if (!compatIndex)
+		{
+			bcrBaseString.Replace("0", "%1");
+			bcrBaseString.Replace("_1", "_%1");		
+			bcrBaseString.Replace("_01","_%1");		
+		}
+
+
+		string nmoBaseString = nmoArray[0];
+
+		nmoBaseString.Replace("001","%1");		
+		nmoBaseString.Replace("000","%1");		
+
+		if (!compatIndex)
+		{
+			nmoBaseString.Replace("0", "%1");
+			nmoBaseString.Replace("_1", "_%1");		
+			nmoBaseString.Replace("_01", "_%1");	
+		}
+
+
+		string opacityBaseString = opArray[0];
+		opacityBaseString.Replace("000","%1");		
+		opacityBaseString.Replace("001","%1");	
+
+		
+		if (!compatIndex)
+		{
+			opacityBaseString.Replace("0", "%1");
+			opacityBaseString.Replace("_1", "_%1");		
+			opacityBaseString.Replace("_01", "_%1");	
+		}
+
+
+			
+		int numFrames =  bcrArray.Count();
+			
+		//Print("Selected "+ numOfFrames.ToString() + "frames");
+			
+			
+		for(int i = offsetFrame; i < numFrames + offsetFrame; i++)
+		{
+			string correctIndex = i.ToString();
+
+				
+			if (compatIndex)
+			{
+				
+				if (i < 10)
+					correctIndex = "00" + i.ToString();
+				else if (i < 100)
+					correctIndex =  "0" + i.ToString();
+				else
+					correctIndex = i.ToString();
+			}
+				
+
+			//
+			//Print(correctIndex);
+			string currentFilePath;
+				
+			if (importTexture)
+			{
+				currentFilePath = saveFolder.GetPath() + "/" + correctIndex + ".edds";
+
+			}
+			else 
+			{
+				currentFilePath = saveFolder.GetPath() + "/" + correctIndex + ".emat";	
+			}
+
+			if (!skipMatGen)	
+			{
+				ResourceName bcrTemp = string.Format(bcrBaseString, correctIndex);
+				ResourceName opacityTemp = string.Format(opacityBaseString, correctIndex);
+				ResourceName nmoTemp = string.Format(nmoBaseString, correctIndex);
+				
+	
+				string correctString = "MatPBRDecal {\n";
+	
+						
+				correctString += string.Format("BCRMap \"%1\"\n", bcrTemp);	
+				correctString += string.Format("OpacityMap \"%1\"\n", opacityTemp);	
+				correctString += string.Format("NMOMap \"%1\"\n", nmoTemp);	
+				correctString += "Color " + colorMaterial + "\n";
+				correctString += "SpecularMul " + specularMul.ToString() + "\n";
+				correctString += "RoughnessScale " + roughnessScale.ToString() + "\n";
+				correctString += "MetalnessScale " + metalnessScale.ToString() + "\n";
+				correctString += string.Format("DielectricReflectance %1 \n", dielectricReflectance);
+				correctString += string.Format("AOScale %1 \n", aoScale.ToString());
+				correctString += "NormalPower " + normalPower.ToString() + "\n"; 
+				correctString += "BlendMode " + blendMode + "\n";
+				correctString += "AlphaTest " + alphaTest.ToString() + "\n";
+				correctString += string.Format("AlphaMul %1\n", alphaMul);
+				correctString += string.Format("GBufferNormal %1\n", gBufferNormal);
+				correctString += string.Format("NormalCombinePower %1\n", normalCombinePower);
+						
+
+				correctString += "}";
+	
+				FileHandle currentMatFile = FileIO.OpenFile(currentFilePath, FileMode.WRITE);
+				if (currentMatFile != 0)
+				{
+					Print("Saving mat " + i.ToString());
+					currentMatFile.FPrint(correctString);
+					currentMatFile.CloseFile();
 
 	
-		Print("Selected "+ numOfFrames.ToString() + "frames");
-		for(int i = offsetFrame; i < numOfFrames; i++)
-		{
-			string correctIndex;
-			
-			if (i < 10)
-				correctIndex = "00" + i.ToString();
-			else if (i < 100)
-				correctIndex = "0" + i.ToString();
-			
-			Print(correctIndex);
-						
-			ResourceName bcrTemp = Workbench.GetResourceName(folderBCR.GetPath() + "/" + startName + correctIndex + ".edds");
-			ResourceName opacityTemp = Workbench.GetResourceName(folderOpacity.GetPath() + "/" + startName + correctIndex + ".edds");
-			ResourceName nmoTemp = Workbench.GetResourceName(folderNMO.GetPath() + "/" + startName + correctIndex + ".edds");
-			
-			matParams.Set("BCRMap", bcrTemp);
-			matParams.Set("OpacityMap", opacityTemp);
-			matParams.Set("NMOMap", nmoTemp);
-		
-			Material newMat = Material.Create(i.ToString(), "MatPBRDecal", matParams);
-
-			string correctString = "MatPBRDecal {\n";
-			correctString += "BCRMap \"" + bcrTemp + "\"\n";
-			correctString += "OpacityMap \"" + opacityTemp + "\"\n";
-			correctString += "NMOMap \"" + nmoTemp + "\"\n";
-			correctString += "AlphaTest " + alphaTest.ToString() + "\n";
-			correctString += "}";
-
-			string currentFilePath = saveFolder.GetPath() + "/" + i.ToString() + ".emat";
-			FileHandle currentMatFile = FileIO.OpenFile(currentFilePath, FileMode.WRITE);
-			if (currentMatFile != 0)
-			{
-				Print("Saving mat " + i.ToString());
-				currentMatFile.FPrint(correctString);
-				currentMatFile.CloseFile()
-			}
+				}
+					
+				
+			}					
 			
 			
 			
 			ResourceName tempMat = Workbench.GetResourceName(currentFilePath);
-			
-			if (i + 1 >= numOfFrames)
+			string absPath;
+			Workbench.GetAbsolutePath(currentFilePath, absPath, false);
+			MetaFile meta = resourceManager.RegisterResourceFile(absPath);
+				
+				
+				
+			if (i + 1 >= numFrames + offsetFrame)
 				arrayResourceNameString += "'" + tempMat + "'};";
 			else
 				arrayResourceNameString += "'" + tempMat + "',";		//can't escape ", so yeah, replace it later with notepad++ or stuff like that
@@ -102,7 +255,7 @@ class BatchMaterialCreator: ResourceManagerPlugin
 	override void Run()
 	{
 		// Grab reference to ResourceManager 
-		ResourceManager resourceManager = Workbench.GetModule(ResourceManager);
+		resourceManager = Workbench.GetModule(ResourceManager);
 		if (!resourceManager) 
 			return;
 		
@@ -119,39 +272,7 @@ class BatchMaterialCreator: ResourceManagerPlugin
 		//Workbench.ScriptDialog("Plugin script dialog title", "Description of the plugin\nThis description can use multiple lines.\nPress export to copy plugin settings to clipboard.\nPress import to grab data from clipboard.", this);
 	}
 	
-	override void RunCommandline()
-	{
-	    ResourceManager resourceManager = Workbench.GetModule(ResourceManager);
-		
-		
-	 
-		// Default values
-		string param = "$ArmaReforger:";
-		string autoclose = "0";
-		
-		// First parameter called myParameter
-		resourceManager.GetCmdLine("-myParameter", param);
-		resourceManager.GetCmdLine("-autoclose", autoclose);
-		
-		// Print parameters in console
-		PrintFormat("CLI parameters -myParameter= %1 -autoClose=%2",param,autoclose);
-		
-		// Find any .et (prefab) files in selected location
-		array<string> files = {};
-		System.FindFiles(files.Insert, param, ".et");
-		int numberOfFiles = files.Count();
-		
-		// Print number of all files to Log Console
-		Print(numberOfFiles);
-	 
-		// Export to clipboard result of the search
-		System.ExportToClipboard("Number of all .et files in " + param + " = " + numberOfFiles.ToString());
-		
-		// Close workbench if autoclose parameter is set to 1
-	    if (autoclose == "1")
-	        Workbench.Exit(0);
-	}
-	
+
 	// This method is executed every time some new resource is registered
 	override void OnRegisterResource(string absFileName, BaseContainer metaFile)
 	{
